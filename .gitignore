@@ -1,0 +1,19 @@
+# keep your footage, exports and personal files out of the repo
+.DS_Store
+*.mov
+*.MOV
+*.mp4
+*.m4v
+*.webm
+cover*.png
+# your own stickers, music and sounds
+assets/
+DRAFTS/
+FINAL/
+exports/
+.env
+*.key
+*.pem
+.claude/
+# local test fixtures (they include a symlink that points outside this folder)
+fixture/
