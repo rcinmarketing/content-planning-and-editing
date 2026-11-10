@@ -2850,7 +2850,9 @@ function renderDrawer(){
       <label class="row"><span>Read it out loud</span><textarea data-p="script" rows="6" placeholder="Beat by beat…">${esc(p.script)}</textarea></label>
       <label class="row"><span>Call to action</span><textarea data-p="cta" rows="2" placeholder="What should they do next?">${esc(p.cta)}</textarea></label>
       <label class="row"><span>Audience</span><input type="text" data-p="audience" value="${esc(p.audience)}" placeholder="Who is this one video for?"></label>
+      <div class="ios-btns" style="border-top:.5px solid var(--ios-sep)"><button class="ios-btn" id="toTone">Polish in Tone Studio</button><button class="ios-btn" id="fromTone">Paste from Tone Studio</button></div>
     </div>
+    <div class="grp-f">Tone Studio rewrites this script in your voice and writes a caption for each platform. It's copy and paste only: nothing is sent from this page.</div>
 
     <div class="grp-t">Shot list <span class="note">${p.shots.length} scenes · ~${Math.round(est)}s · ${p.shots.filter(s => s.done).length} filmed</span></div>
     <div class="grp">
@@ -2941,6 +2943,8 @@ dr.addEventListener('click', async e => {
   if (b.id === 'dupPlan'){ const c = { ...clone(p), id: uid(), title: (p.title || 'Untitled video') + ' (copy)', date: '', status: 'idea' }; c.shots.forEach(s => { s.id = uid(); s.done = false; }); plans.push(c); openPlanId = c.id; }
   if (b.id === 'delPlan'){ if (!await askConfirm(`Delete “${planName(p)}”? This can't be undone.`, 'Delete video')) return; plans = plans.filter(x => x !== p); openPlanId = null; }
   if (b.id === 'sendTl') return sendPlanToTimeline(p);
+  if (b.id === 'toTone') return sendToTone(p);
+  if (b.id === 'fromTone') return pasteFromTone(p);
   if (b.id === 'sendClaude'){
     if (!p.notes.trim()) return toast('Write a note for Claude first.');
     return toast(await copyText(claudeBrief(p)) ? 'Copied. Paste it into Claude to get help with this video.' : 'Copy was blocked by the browser. Select your notes and copy them by hand.');
@@ -2955,7 +2959,59 @@ function claudeBrief(p){
   return `Please help me with this short-form video plan. My notes are at the end.\n\n` +
     line('Title', p.title) + line('Status', STATUSES.find(x => x[0] === p.status)?.[1]) + line('Post date', p.date) + line('Pillar', p.pillar) + line('Audience', p.audience) +
     line('Hook (first 1–2 seconds)', p.hook) + (p.script ? `Script:\n${p.script}\n` : '') + line('Call to action', p.cta) +
-    (shots ? `Shot list:\n${shots}\n` : '') + `\nMy notes:\n${p.notes.trim()}\n`;
+    (shots ? `Shot list:\n${shots}\n` : '') + `\nMy notes:\n${p.notes.trim()}\n` +
+    (voiceProfile() ? `\nMy voice profile (write anything for this video in this voice):\n${voiceProfile()}\n` : '');
+}
+/* Tone Studio hand-off (github.com/rcinmarketing/ai-tone-of-voice-prompts). The two pages run on different origins and
+   can't read each other's storage, so they swap a small plain-text "card" through the clipboard: a marker line, then
+   JSON. The format is documented in VIDEO-STUDIO.md in that repo. Nothing is sent anywhere. */
+const TONE_URL = 'https://rcinmarketing.github.io/ai-tone-of-voice-prompts/';
+const CARD_TO_TONE = 'VIDEO-STUDIO-CARD v1', CARD_FROM_TONE = 'TONE-STUDIO-CARD v1';
+const voiceProfile = () => str(store.get('vs.voice', '')).trim();
+async function sendToTone(p){
+  if (!(p.hook + p.script + p.cta).trim()) return toast('Write a hook or script first.');
+  const card = { v: 1, planId: p.id, title: p.title, hook: p.hook.trim(), script: p.script.trim(), cta: p.cta.trim(), audience: p.audience.trim(),
+    pillar: p.pillar, platforms: VPLATS.filter(pl => p.versions[pl.k]).map(pl => pl.k) };
+  if (!await copyText(CARD_TO_TONE + '\n' + JSON.stringify(card))) return toast('Copy was blocked by the browser.');
+  window.open(str(store.get('vs.toneUrl', '')) || TONE_URL, 'tone-studio', 'noopener');
+  toast('Copied. In Tone Studio, click “Import from Video Studio”.');
+}
+function readCard(txt, marker){
+  txt = str(txt); const i = txt.indexOf(marker); if (i < 0) return null;
+  const j = txt.indexOf('{', i), k = txt.lastIndexOf('}'); if (j < 0 || k < j) return null;
+  try { const c = JSON.parse(txt.slice(j, k + 1)); return c && typeof c === 'object' && c.v === 1 ? c : null; } catch { return null; }
+}
+/* the polished script comes back as one text: when the video had a hook / call to action, its first / last paragraph
+   goes back into that field and the rest into the script */
+function splitScript(t, hook, cta){
+  const ps = t.split(/\n\s*\n/).map(x => x.trim()).filter(Boolean), out = { hook: '', script: '', cta: '' };
+  if (hook && ps.length > 1) out.hook = ps.shift();
+  if (cta && ps.length > 1) out.cta = ps.pop();
+  out.script = ps.join('\n\n'); return out;
+}
+async function pasteFromTone(p){
+  let card = null;
+  try { card = readCard(await navigator.clipboard.readText(), CARD_FROM_TONE); } catch {}
+  if (!card){
+    const t = await askText('Paste what you copied with “Send to Video Studio” in Tone Studio.', '');
+    if (!t) return; card = readCard(t, CARD_FROM_TONE);
+  }
+  if (!card) return toast('That isn’t from Tone Studio. Click “Send to Video Studio” there first.');
+  const cut = v => str(v).slice(0, 20000).trim();
+  const same = card.planId === p.id, parts = splitScript(cut(card.script), same && !!card.hasHook, same && !!card.hasCta);
+  const caps = VPLATS.map(pl => [pl, cut(card.captions?.[pl.k])]).filter(([, v]) => v);
+  const voice = cut(card.voiceProfile);
+  const what = [parts.script && ['script', parts.hook && 'hook', parts.cta && 'call to action'].filter(Boolean).join(', '),
+    caps.length && `captions for ${caps.map(([pl]) => pl.name).join(', ')}`, voice && 'your voice profile'].filter(Boolean);
+  if (!what.length) return toast('That card is empty. Paste a draft into Tone Studio first.');
+  const other = card.planId && !same ? `This came from a different video (“${cut(card.title) || 'untitled'}”). ` : '';
+  if (!await askConfirm(`${other}Update “${planName(p)}” with the ${what.join('; ')} from Tone Studio? The current text in those fields is replaced.`, 'Update video', false)) return;
+  if (parts.script) p.script = parts.script;
+  if (parts.hook) p.hook = parts.hook;
+  if (parts.cta) p.cta = parts.cta;
+  for (const [pl, v] of caps) p.versions[pl.k] = { status: 'planned', title: '', time: '', url: '', ...(p.versions[pl.k] || {}), caption: v };
+  if (voice) store.set('vs.voice', voice);
+  savePlans(); renderPlan(); toast(`Updated from Tone Studio${voice ? '. Your voice profile is now added to “Send notes to Claude”' : ''}.`);
 }
 async function copyText(txt){
   try { await navigator.clipboard.writeText(txt); return true; }

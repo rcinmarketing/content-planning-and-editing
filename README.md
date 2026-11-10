@@ -18,6 +18,7 @@ It runs in your browser and keeps everything on your computer. There's no accoun
 - **Calendar:** a week and month view, with each post's version per platform: LinkedIn, Instagram, TikTok, YouTube, X and Substack.
 - **Video details:** for each video, write the script, build a shot list, and keep a note for Claude. Below those, a caption for each platform.
 - **Send to the editor:** link your clips to the shot list, then send them to the timeline in order.
+- **Polish in Tone Studio:** send a video's script to [Tone of Voice Studio](https://github.com/rcinmarketing/ai-tone-of-voice-prompts) to rewrite it in your voice and write a caption for each platform, then paste it all back with **Paste from Tone Studio**. Your voice profile comes back too, and **Send notes to Claude** includes it from then on. [How it works](https://github.com/rcinmarketing/ai-tone-of-voice-prompts/blob/main/VIDEO-STUDIO.md).
 
 **Edit**
 
@@ -53,7 +54,7 @@ Make an `assets/` folder next to `index.html`:
   - the MediaPipe Tasks Vision library (pinned to version 0.10.14, from cdn.jsdelivr.net);
   - its selfie-segmentation model (from storage.googleapis.com), used on your device for "behind me" text.
 
-  Those hosts can see your IP address. A Content Security Policy blocks every other host. The social links in the footer only open when you click them.
+  Those hosts can see your IP address. **Polish in Tone Studio** opens the Tone Studio page in a new tab; the script goes there through your clipboard, not over the network. A Content Security Policy blocks every other host. The social links in the footer only open when you click them.
 - **The server is local and read-only.** `serve.py` listens on 127.0.0.1 only.
   - It answers GET and HEAD and nothing else.
   - It serves only files inside this folder with a short list of media and page extensions: no `..`, no absolute paths, no hidden files, no symlinks out, and no directory listings.
