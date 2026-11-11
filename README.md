@@ -63,9 +63,9 @@ Make an `assets/` folder next to `index.html`:
 - **Don't expose it to the internet.** Don't put `serve.py` behind a tunnel or a public host. Anyone who reached it could read the media files you keep in this folder.
 - **Keep your footage out of git.** `.gitignore` excludes video files, `assets/`, exports and key files. Check `git status` before you commit.
 
-## Copyright
+## License
 
-© 2026 [Rizza Carla Ramos](https://www.linkedin.com/in/rizzacarlaramos/). All rights reserved. Content and Video Studio was made by Rizza Carla Ramos.
+Made by [Rizza Carla Ramos](https://www.linkedin.com/in/rizzacarlaramos/) ([RC in Marketing](https://github.com/rcinmarketing)). Free to use, adapt and share under the [MIT License with Attribution Requirement](LICENSE): any copy or version of Content and Video Studio must keep the credit footer visible, and shared copies must credit RC in Marketing with a link back to this repo.
 
 ---
 
