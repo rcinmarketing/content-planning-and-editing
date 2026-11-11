@@ -2965,10 +2965,10 @@ function claudeBrief(p){
     (shots ? `Shot list:\n${shots}\n` : '') + `\nMy notes:\n${p.notes.trim()}\n` +
     (voiceProfile() ? `\nMy voice profile (write anything for this video in this voice):\n${voiceProfile()}\n` : '');
 }
-/* Sound Like Me hand-off (github.com/rcinmarketing/ai-tone-of-voice-prompts). The two pages run on different origins and
+/* Sound Like Me hand-off (github.com/rcinmarketing/do-not-sound-like-ai). The two pages run on different origins and
    can't read each other's storage, so they swap a small plain-text "card" through the clipboard: a marker line, then
    JSON. The format is documented in VIDEO-STUDIO.md in that repo. Nothing is sent anywhere. */
-const TONE_URL = 'https://rcinmarketing.github.io/ai-tone-of-voice-prompts/';
+const TONE_URL = 'https://rcinmarketing.github.io/do-not-sound-like-ai/';
 const CARD_TO_TONE = 'VIDEO-STUDIO-CARD v1', CARD_FROM_TONE = 'TONE-STUDIO-CARD v1';
 const voiceProfile = () => str(store.get('vs.voice', '')).trim();
 async function sendToTone(p){

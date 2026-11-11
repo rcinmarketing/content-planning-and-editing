@@ -18,7 +18,7 @@ It runs in your browser and keeps everything on your computer. There's no accoun
 - **Calendar:** a week and month view, with each post's version per platform: LinkedIn, Instagram, TikTok, YouTube, X and Substack.
 - **Video details:** for each video, write the script, build a shot list, and keep a note for Claude. Below those, a caption for each platform.
 - **Send to the editor:** link your clips to the shot list, then send them to the timeline in order.
-- **Polish with Sound Like Me:** send a video's script to [Sound Like Me](https://github.com/rcinmarketing/ai-tone-of-voice-prompts) to rewrite it in your voice and write a caption for each platform, then paste it all back with **Paste from Sound Like Me**. Your voice profile comes back too, and **Send notes to Claude** includes it from then on. [How it works](https://github.com/rcinmarketing/ai-tone-of-voice-prompts/blob/main/VIDEO-STUDIO.md).
+- **Polish with Sound Like Me:** send a video's script to [Sound Like Me](https://github.com/rcinmarketing/do-not-sound-like-ai) to rewrite it in your voice and write a caption for each platform, then paste it all back with **Paste from Sound Like Me**. Your voice profile comes back too, and **Send notes to Claude** includes it from then on. [How it works](https://github.com/rcinmarketing/do-not-sound-like-ai/blob/main/VIDEO-STUDIO.md).
 
 **Edit**
 
