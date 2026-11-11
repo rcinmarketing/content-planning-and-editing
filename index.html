@@ -87,6 +87,7 @@ header label{color:var(--muted);display:flex;align-items:center;gap:6px}
 .music b{color:var(--text);font-size:12px}.music .mrow{display:flex;align-items:center;gap:8px;margin-top:8px}.music .mrow span{min-width:118px}.music .mname{color:var(--text);min-width:0!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.music input[type=range]{flex:1}
 .lib-opts{padding:0 14px 8px;color:var(--muted);font-size:12px;display:flex;align-items:center;gap:6px}
 #libList{flex:none;padding:0 8px 12px}
+#libList[hidden],.lib-opts[hidden]{display:none!important}
 .folder{margin-top:6px}
 .folder-h{display:flex;align-items:center;gap:6px;padding:6px;color:var(--muted);font-size:12px;font-weight:600;position:sticky;top:0;background:var(--panel);z-index:1}
 .folder-h span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -157,6 +158,8 @@ header label{color:var(--muted);display:flex;align-items:center;gap:6px}
 .list{display:flex;flex-direction:column;gap:4px}
 .li{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;background:var(--panel2);border:1px solid transparent;cursor:pointer}
 .li.on{border-color:var(--accent);background:var(--accent-bg)}
+.inline-ed{border:1px solid var(--accent);border-radius:8px;background:var(--panel);padding:0 10px;margin:0 0 6px}
+.inline-ed>.sec:last-child{border-bottom:0}
 .li .t{flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .dot{width:9px;height:9px;border-radius:2px;flex:none}
 textarea{width:100%;resize:vertical;min-height:58px}
@@ -569,7 +572,7 @@ tr:hover .an-tlx{display:inline-flex}
   </div>
   <div id="drop">
     <b>Drop videos or folders here</b>
-    .mov · .mp4 · .webm — stays on your computer
+    .mov · .mp4 · .webm — goes straight onto the timeline, stays on your computer
     <div class="row">
       <button class="btn sm" id="pickFiles">Add files</button>
       <button class="btn sm" id="pickFolder">Add folder</button>
@@ -577,8 +580,8 @@ tr:hover .an-tlx{display:inline-flex}
     <input type="file" id="fileIn" accept="video/*,.mov,.MOV,.mp4,.m4v,.webm" multiple hidden>
     <input type="file" id="folderIn" webkitdirectory multiple hidden>
   </div>
-  <label class="lib-opts"><input type="checkbox" id="autoAdd"> Add new uploads to timeline automatically</label>
-  <div id="libList"></div>
+  <label class="lib-opts" hidden><input type="checkbox" id="autoAdd"> Add new uploads to timeline automatically</label>
+  <div id="libList" hidden></div>
 </aside>
 
 <main id="stageWrap">
@@ -883,21 +886,24 @@ function addFiles(items){
   const vids = items.filter(i => isVideo(i.file))
     .sort((a, b) => (a.folder + '/' + a.file.name).localeCompare(b.folder + '/' + b.file.name, undefined, { numeric: true }));
   if (!vids.length) { toast('No video files found.'); return; }
-  let added = 0, relinked = 0;
+  let added = 0, relinked = 0, reused = 0;
   for (const { file, folder } of vids){
     let s = [...sources.values()].find(x => x.status === 'missing' && x.name === file.name);
     if (s) { attachFile(s, file); relinked++; }
     else {
-      if ([...sources.values()].some(x => x.name === file.name && x.folder === folder && x.file?.size === file.size)) continue;
+      // no clips library: every upload goes onto the timeline; a file you already added is reused, not copied again
+      const dup = [...sources.values()].find(x => x.name === file.name && x.folder === folder && x.file?.size === file.size);
+      if (dup) { addClip(dup.id, false); reused++; continue; }
       s = createSource({ id: uid(), name: file.name, folder, file }); added++;
-      if (state.view.autoAdd) addClip(s.id, false);
+      addClip(s.id, false);
     }
     idb.put(s.id, { file, name: s.name, folder: s.folder }).catch(() => {
       if (!storageWarned) { storageWarned = true; toast("Browser storage is full — some media won't be remembered after reload."); }
     });
   }
-  toast(`${added} video${added===1?'':'s'} added${relinked ? `, ${relinked} relinked` : ''}.`);
-  if (state.view.autoAdd && added) commit(); else save();
+  const n = added + reused;
+  toast(`${n} video${n===1?'':'s'} added to the timeline${relinked ? `, ${relinked} relinked` : ''}.`);
+  if (n) commit(); else save();
   renderLibrary(); renderTimeline();
 }
 async function filesFromDrop(dt){
@@ -2319,7 +2325,7 @@ function textPanel(c){
   const dur = c.voice ? state.vo.dur || 0 : clipDur(c); const tx = selText();
   const list = c.texts.map(x => { const bad = textIssues(x).length; return `<div class="li${x.id === selTextId ? ' on' : ''}" data-text="${x.id}">
       <span class="dot" style="background:${bad ? 'var(--danger)' : 'var(--ok)'}"></span><span class="t">${x.img ? '🖼 ' + esc(x.text || 'Sticker') : x.burst ? '💥 ' + esc(x.burst.word) : x.tear ? '📄 Ripped paper ' + (x.tear.peak > 0.01 ? '(into next clip)' : '(from last clip)') : x.paper ? '📄 Torn paper banner' : esc(x.text.split('\n')[0] || '(empty)')}</span>
-      <span class="note">${fmtT(x.start)}–${fmtT(x.end == null ? dur : x.end)}</span></div>`; }).join('');
+      <span class="note">${fmtT(x.start)}–${fmtT(x.end == null ? dur : x.end)}</span></div>${x.id === selTextId ? '<!--ED-->' : ''}`; }).join('');
   let ed = '';
   if (tx?.img){
     ed = `
@@ -2441,12 +2447,8 @@ function textPanel(c){
         <button class="btn sm" data-act="textToAll">Copy style to all</button><button class="btn sm danger" data-act="delText">Delete</button></div>
     </div>`;
   }
-  return `<div class="sec"><h4>Text & stickers on this clip <span><button class="btn sm primary" data-act="addText">+ Text <kbd>T</kbd></button>
-      <select id="addSticker" class="btn sm"><option value="">+ Sticker</option>${STICKERS.map(s => `<option value="${esc(s.file)}">${esc(s.label)}</option>`).join('')}</select>
-      <select id="addComic" class="btn sm"><option value="">+ Comic</option><optgroup label="Captions"><option value="cap-big">Big caption · orange ripped paper</option><option value="cap-small">Small caption · cream ripped paper</option></optgroup>
-        <optgroup label="Bursts">${BURST_WORDS.map(([w]) => `<option value="burst:${w}">${w}!</option>`).join('')}</optgroup>
-        <optgroup label="Paper"><option value="tear">Ripped paper transition → next clip</option><option value="paper-top">Torn paper banner · top</option><option value="paper-bottom">Torn paper banner · bottom</option></optgroup></select></span></h4>
-    ${list ? `<div class="list">${list}</div>` : `<div class="note">No text yet. Hooks and captions work best inside the green safe area.</div>`}</div>${ed}`;
+  return `<div class="sec">
+    ${list ? `<div class="list">${list.replace('<!--ED-->', ed ? `<div class="inline-ed">${ed}</div>` : '')}</div>` : `<div class="note">No text yet. Press <kbd>T</kbd> to add text. Hooks and captions work best inside the green safe area.</div>`}</div>${list.includes('<!--ED-->') ? '' : ed}`;
 }
 function zonesPanel(){
   const names = [...Object.keys(PRESETS), ...Object.keys(customPresets)];
@@ -2523,7 +2525,7 @@ $('#inspBody').addEventListener('click', async e => {
   if (li){ selTextId = li.dataset.text; const tx = selText(); const info = seqInfo().find(x => x.c.id === state.selectedClip);
     if (voSel && tx){ if (!textActive(tx, voLocal(), state.vo.dur)){ const at = voTimeOf(tx.start + 0.01); if (at != null) seek(at); } }
     else if (info && tx){ const loc = locate(t); if (!loc || loc.c.id !== info.c.id || !textActive(tx, loc.local, info.dur)) seek(info.start + tx.start + 0.01); }
-    renderInspector(); lastSelKey = ''; return; }
+    renderInspector(); lastSelKey = ''; $('#inspBody .li.on')?.scrollIntoView({ block: 'nearest' }); return; }
   const zl = e.target.closest('[data-zone]');
   if (zl){ selZone = +zl.dataset.zone; renderInspector(); renderZones(); return; }
   const id = e.target.id;
