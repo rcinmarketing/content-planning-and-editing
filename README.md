@@ -1,4 +1,4 @@
-<p align="center"><img src="docs/icons/rc.svg" width="64" height="64" alt="RC"></p>
+<p align="center"><a href="https://www.youtube.com/@rc-inmarketing"><img src="docs/icons/rc.svg" width="96" height="96" alt="RC in Marketing"></a></p>
 
 <h1 align="center">Content and Video Studio</h1>
 
@@ -74,5 +74,5 @@ Made by [Rizza Carla Ramos](https://www.linkedin.com/in/rizzacarlaramos/) ([RC i
   <a href="https://www.linkedin.com/in/rizzacarlaramos/" title="LinkedIn"><img src="docs/icons/linkedin.svg" width="28" height="28" alt="LinkedIn"></a>&nbsp;
   <a href="https://www.instagram.com/rcinmarketing/" title="Instagram"><img src="docs/icons/instagram.svg" width="28" height="28" alt="Instagram"></a>&nbsp;
   <a href="https://www.tiktok.com/@rcinmarketing" title="TikTok"><img src="docs/icons/tiktok.svg" width="28" height="28" alt="TikTok"></a>&nbsp;
-  <a href="https://www.youtube.com/channel/UCaY9J26Afom5AF2o4UbYdTw" title="YouTube"><img src="docs/icons/youtube.svg" width="28" height="28" alt="YouTube"></a>
+  <a href="https://www.youtube.com/@rc-inmarketing" title="YouTube"><img src="docs/icons/youtube.svg" width="28" height="28" alt="YouTube"></a>
 </p>
