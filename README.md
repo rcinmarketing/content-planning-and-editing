@@ -1,4 +1,4 @@
-<p align="center"><a href="https://www.youtube.com/@rc-inmarketing"><img src="docs/icons/rc-logo-comic.png" width="140" height="140" alt="RC in Marketing"></a></p>
+<p align="center"><a href="https://www.youtube.com/@rc-inmarketing"><img src="docs/icons/rc-logo-comic-v2.png" width="140" height="140" alt="RC in Marketing"></a></p>
 
 <h1 align="center">Content and Video Studio</h1>
 
