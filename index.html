@@ -361,6 +361,7 @@ tr:hover .an-tlx{display:inline-flex}
 #imgModal .modal{width:auto;max-width:min(1100px,calc(100vw - 32px));padding:12px}
 #imgModal img{display:block;max-width:100%;max-height:80vh;border-radius:8px;margin:0 auto}
 #drawer{position:absolute;top:0;right:0;bottom:0;width:min(470px,100%);background:var(--panel);border-left:1px solid var(--line);transform:translateX(105%);transition:transform .2s;overflow:auto;padding:14px 18px 30px;box-shadow:-20px 0 50px rgba(0,0,0,.45);z-index:2}
+#drawer:not(.open){box-shadow:none}
 #drawer.open{transform:none}
 .dr-h{display:flex;gap:8px;align-items:center}
 .dr-title{flex:1;font-size:17px;font-weight:700;background:transparent!important;border-color:transparent!important;padding:6px 4px!important}
@@ -516,6 +517,22 @@ tr:hover .an-tlx{display:inline-flex}
   #planView{bottom:0}
   body{grid-template-columns:1fr;grid-template-rows:52px 46vh auto 200px auto auto;grid-template-areas:"top" "stage" "insp" "tl" "lib" "foot";overflow:auto;height:auto}
   #lib,#insp{border:0;border-top:1px solid var(--line)}
+}
+/* phones in Plan mode: the header stays put, only the board scrolls */
+@media (max-width:900px){
+  html:has(body.plan){overflow:hidden;overscroll-behavior:none}
+  body.plan{height:100vh;height:100dvh;overflow:hidden;overscroll-behavior:none}
+  body.plan header{position:fixed;top:0;left:0;right:0;height:52px;z-index:22;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+  body.plan header::-webkit-scrollbar{display:none}
+  body.plan .brand{position:sticky;left:-14px;margin-left:-14px;padding-left:14px;background:var(--panel);z-index:1;flex:none}
+  body.plan .brand span{font-size:18px}
+  .pv-bar{flex-wrap:wrap;gap:8px;padding:8px 12px}
+  .pv-filters{display:flex;gap:8px;flex:1 1 100%;min-width:0}
+  .pv-filters input{flex:1;min-width:0}
+  #pvBody{padding:12px;overscroll-behavior:contain}
+  body.plan footer.credit{position:fixed;left:0;right:0;bottom:0;height:28px;flex-wrap:nowrap;white-space:nowrap;overflow-x:auto;padding:0 12px;scrollbar-width:none}
+  body.plan footer.credit::-webkit-scrollbar{display:none}
+  body.plan #planView{bottom:28px}
 }
 </style>
 </head>
